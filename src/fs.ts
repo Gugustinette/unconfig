@@ -1,6 +1,7 @@
-import fs, { constants, promises as fsp } from 'node:fs'
 import { dirname, parse, resolve } from 'node:path'
 import process from 'node:process'
+import { lstat, stat } from '@quansync/fs'
+import { quansync } from 'quansync/macro'
 
 export interface FindUpOptions {
   /**
@@ -21,44 +22,43 @@ export interface FindUpOptions {
   allowSymlinks?: boolean
 }
 
-function existsSync(fp: string) {
+const isFile = quansync(async (path: string, allowSymlinks: boolean) => {
   try {
-    fs.accessSync(fp, constants.R_OK)
-    return true
+    return (await (allowSymlinks ? lstat : stat)(path)).isFile()
   }
   catch {
     return false
   }
-}
+})
 
-export async function findUp(paths: string[], options: FindUpOptions = {}): Promise<string[]> {
-  const {
-    cwd = process.cwd(),
-    stopAt = parse(cwd).root,
-    multiple = false,
-    allowSymlinks = true,
-  } = options
+export const findUp = quansync(
+  async (paths: string[], options: FindUpOptions = {}): Promise<string[]> => {
+    const {
+      cwd = process.cwd(),
+      stopAt = parse(cwd).root,
+      multiple = false,
+      allowSymlinks = true,
+    } = options
 
-  let current = cwd
+    let current = cwd
 
-  const files: string[] = []
+    const files: string[] = []
 
-  const stat = allowSymlinks ? fsp.stat : fsp.lstat
-
-  while (current && current !== stopAt) {
-    for (const path of paths) {
-      const filepath = resolve(current, path)
-      if (existsSync(filepath) && (await stat(filepath)).isFile()) {
-        files.push(filepath)
-        if (!multiple)
-          return files
+    while (current && current !== stopAt) {
+      for (const path of paths) {
+        const filepath = resolve(current, path)
+        if (await isFile(filepath, allowSymlinks)) {
+          files.push(filepath)
+          if (!multiple)
+            return files
+        }
       }
+      const parent = dirname(current)
+      if (parent === current)
+        break
+      current = parent
     }
-    const parent = dirname(current)
-    if (parent === current)
-      break
-    current = parent
-  }
 
-  return files
-}
+    return files
+  },
+)

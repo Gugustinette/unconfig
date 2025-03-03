@@ -42,8 +42,10 @@
   },
   "dependencies": {
     "@antfu/utils": "^8.1.0",
+    "@quansync/fs": "^0.1.1",
     "defu": "^6.1.4",
-    "jiti": "^2.4.2"
+    "jiti": "^2.4.2",
+    "quansync": "^0.2.6"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.1.1",
@@ -55,6 +57,7 @@
     "lodash-es": "^4.17.21",
     "typescript": "^5.7.3",
     "unbuild": "^3.3.1",
+    "unplugin-quansync": "^0.3.3",
     "vitest": "^3.0.5"
   }
 }
