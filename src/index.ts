@@ -3,7 +3,6 @@ import type { LoadConfigOptions, LoadConfigResult, LoadConfigSource } from './ty
 import { createRequire } from 'node:module'
 import { basename, dirname, join } from 'node:path'
 import process from 'node:process'
-import { pathToFileURL } from 'node:url'
 import { toArray } from '@antfu/utils'
 import { readFile, unlink, writeFile } from '@quansync/fs'
 import defu from 'defu'
@@ -33,43 +32,30 @@ const loadConfigFile = quansync(async <T>(
     return code
   })
 
-  const builtinTS = process.features.typescript || process.versions.bun || process.versions.deno
   const importModule = quansync({
     sync: () => {
-      if (builtinTS) {
-        const defaultImport = require(bundleFilepath)
-        config = interopDefault(defaultImport)
-      }
-      else {
-        const { createJiti } = require('jiti') as typeof import('jiti')
-        const jiti = createJiti(import.meta.url, {
-          fsCache: false,
-          moduleCache: false,
-          interopDefault: true,
-        })
-        config = interopDefault(jiti(bundleFilepath))
-        dependencies = Object.values(jiti.cache)
-          .map(i => i.filename)
-          .filter(Boolean)
-      }
+      const { createJiti } = require('jiti') as typeof import('jiti')
+      const jiti = createJiti(import.meta.url, {
+        fsCache: false,
+        moduleCache: false,
+        interopDefault: true,
+      })
+      config = interopDefault(jiti(bundleFilepath))
+      dependencies = Object.values(jiti.cache)
+        .map(i => i.filename)
+        .filter(Boolean)
     },
     async: async () => {
-      if (builtinTS) {
-        const defaultImport = await import(pathToFileURL(bundleFilepath).href)
-        config = interopDefault(defaultImport)
-      }
-      else {
-        const { createJiti } = await import('jiti')
-        const jiti = createJiti(import.meta.url, {
-          fsCache: false,
-          moduleCache: false,
-          interopDefault: true,
-        })
-        config = interopDefault(await jiti.import(bundleFilepath, { default: true }))
-        dependencies = Object.values(jiti.cache)
-          .map(i => i.filename)
-          .filter(Boolean)
-      }
+      const { createJiti } = await import('jiti')
+      const jiti = createJiti(import.meta.url, {
+        fsCache: false,
+        moduleCache: false,
+        interopDefault: true,
+      })
+      config = interopDefault(await jiti.import(bundleFilepath, { default: true }))
+      dependencies = Object.values(jiti.cache)
+        .map(i => i.filename)
+        .filter(Boolean)
     },
   })
 
