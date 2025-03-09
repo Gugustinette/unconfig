@@ -8,6 +8,11 @@ export default defineBuildConfig({
   ],
   declaration: true,
   clean: true,
+  rollup: {
+    inlineDependencies: [
+      '@antfu/utils',
+    ],
+  },
   hooks: {
     'rollup:options': function (ctx, options) {
       options.plugins.push(Quansync())
