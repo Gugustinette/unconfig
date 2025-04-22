@@ -24,7 +24,7 @@ export interface FindUpOptions {
 
 const isFile = quansync(async (path: string, allowSymlinks: boolean) => {
   try {
-    return (await (allowSymlinks ? lstat : stat)(path)).isFile()
+    return (await (allowSymlinks ? stat : lstat)(path)).isFile()
   }
   catch {
     return false
