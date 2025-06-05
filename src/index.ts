@@ -10,6 +10,7 @@ import { quansync } from 'quansync/macro'
 import { findUp } from './fs'
 import { interopDefault } from './interop'
 import { defaultExtensions } from './types'
+import { jit } from './util/jit'
 
 export * from './types'
 
@@ -46,16 +47,15 @@ const loadConfigFile = quansync(async <T>(
         .filter(Boolean)
     },
     async: async () => {
-      const { createJiti } = await import('jiti')
-      const jiti = createJiti(import.meta.url, {
-        fsCache: false,
-        moduleCache: false,
-        interopDefault: true,
+      const module = await jit({
+        path: bundleFilepath,
       })
-      config = interopDefault(await jiti.import(bundleFilepath, { default: true }))
+      config = interopDefault(module.default)
+      /*
       dependencies = Object.values(jiti.cache)
         .map(i => i.filename)
         .filter(Boolean)
+        */
     },
   })
 
